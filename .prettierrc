@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": "*.jet",
+      "options": {
+        "parser": "html"
+      }
+    }
+  ]
+}
