@@ -7,10 +7,22 @@
     <title>Sketlo</title>
   </head>
   <body>
-    <div>
-      <h1 class="text-3xl text-blue font-bold">Welcome to Sketlo</h1>
-      <form>
-        <input type="text" name="username" />
+    <div class="m-8">
+      <h1 class="text-3xl text-orange-500 font-bold">Welcome to Sketlo</h1>
+      <hr class="mt-4 mb-4 border-slate-600" />
+      <form action="/join" method="post" class="flex items-center gap-4">
+        <input
+          class="border-2 rounded-md border-slate-600 p-2 focus:outline-none"
+          type="text"
+          name="username"
+          placeholder="Enter Username"
+        />
+        <button
+          class="bg-blue-500 px-4 py-2 rounded-md text-white hover:bg-blue-600 hover:duration-150"
+          type="submit"
+        >
+          Join
+        </button>
       </form>
     </div>
   </body>

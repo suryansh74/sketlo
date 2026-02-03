@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -47,6 +48,18 @@ func TestAppRoutes(t *testing.T) {
 		assertStringContains(t, body, "<form")
 		assertStringContains(t, body, `name="username"`)
 	})
+
+	t.Run("Given a valid username is submitted", func(t *testing.T) {
+		formData := url.Values{"username": {"Ronak"}}
+		req := httptest.NewRequest(http.MethodPost, "/join", strings.NewReader(formData.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		res := httptest.NewRecorder()
+		server.router.ServeHTTP(res, req)
+
+		assertStatusCode(t, res.Code, http.StatusSeeOther)
+		responseLocation := res.Header().Get("Location")
+		assertLocation(t, responseLocation, "/game?username=Ronak")
+	})
 }
 
 // Assert Helper Function
@@ -84,5 +97,12 @@ func assertStringContains(t *testing.T, body, match string) {
 	t.Helper()
 	if !strings.Contains(body, match) {
 		t.Errorf("got %q, want %q", body, match)
+	}
+}
+
+func assertLocation(t *testing.T, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }

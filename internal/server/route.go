@@ -7,6 +7,7 @@ import (
 func (srv *server) SetupRoutes(gameHandler *handlers.GameHandler) {
 	// web endpoints from here
 	srv.router.Get("/", gameHandler.HomeHandler)
+	srv.router.Post("/join", gameHandler.JoinRoom)
 
 	// api endpoints from here
 	srv.router.Get("/api/check_health", gameHandler.CheakGameHealth)

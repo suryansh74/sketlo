@@ -34,3 +34,8 @@ func (gh *GameHandler) CheakGameHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
+
+func (gh *GameHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("username")
+	http.Redirect(w, r, "/game?username="+username, http.StatusSeeOther)
+}
