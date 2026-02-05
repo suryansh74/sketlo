@@ -11,5 +11,14 @@
       <h1 class="text-3xl text-orange-500 font-bold">Welcome {{Username}}</h1>
       <hr class="mt-4 mb-4 border-slate-600" />
     </div>
+    <script>
+      var socket = null;
+      document.addEventListener("DOMContentLoaded", function () {
+        socket = new WebSocket("ws://localhost:8000/ws");
+        socket.onopen = () => {
+          console.log("Connected to server");
+        };
+      });
+    </script>
   </body>
 </html>

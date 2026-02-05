@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/CloudyKit/jet/v6"
+	"github.com/gorilla/websocket"
 	"github.com/suryansh74/sketlo/internal/config"
 )
 
@@ -68,6 +69,19 @@ func TestAppRoutes(t *testing.T) {
 		assertStatusCode(t, res.Code, http.StatusOK)
 		assertStringContains(t, res.Body.String(), "Ronak")
 	})
+	t.Run("check websocket upgrade for /ws endpoint", func(t *testing.T) {
+		ts := httptest.NewServer(server.router)
+		defer ts.Close()
+
+		wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+
+		dialer := websocket.Dialer{}
+		conn, res, err := dialer.Dial(wsURL, nil)
+		assertNotError(t, err)
+		defer conn.Close()
+
+		assertStatusCode(t, res.StatusCode, http.StatusSwitchingProtocols)
+	})
 }
 
 // Assert Helper Function
@@ -97,7 +111,7 @@ func assertHeader(t *testing.T, got, want string) {
 func assertNotError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
-		t.Errorf("got error:%s", err.Error())
+		t.Fatalf("got error:%s", err.Error())
 	}
 }
 
