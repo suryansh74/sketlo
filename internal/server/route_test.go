@@ -111,6 +111,40 @@ func TestAppRoutes(t *testing.T) {
 
 		assertEqual(t, string(got), string(message))
 	})
+	t.Run("hub broadcasting json payload", func(t *testing.T) {
+		ts := httptest.NewServer(server.router)
+		defer ts.Close()
+
+		wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+
+		dialer := websocket.Dialer{}
+
+		aliceConn, _, err := dialer.Dial(wsURL, nil)
+		assertNotError(t, err)
+		defer aliceConn.Close()
+
+		bobConn, _, err := dialer.Dial(wsURL, nil)
+		assertNotError(t, err)
+		defer bobConn.Close()
+
+		// alice sending data
+		wsPayload := chat.WsPayload{
+			Action:   "broadcast",
+			Username: "Alice",
+			Message:  "Hello JSON",
+		}
+
+		err = aliceConn.WriteJSON(wsPayload)
+		assertNotError(t, err)
+
+		// bob reads json same data as sended
+		var received chat.WsPayload
+		err = bobConn.ReadJSON(&received)
+		assertNotError(t, err)
+
+		assertEqual(t, received.Action, "broadcast")
+		assertEqual(t, received.Message, "Hello JSON")
+	})
 }
 
 // Assert Helper Function
