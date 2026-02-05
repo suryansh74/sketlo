@@ -1,0 +1,1 @@
+1. /game endpoint should display sweet alert instead of html welcome

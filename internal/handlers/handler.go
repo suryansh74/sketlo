@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/CloudyKit/jet/v6"
 	"github.com/suryansh74/sketlo/internal/config"
 )
 
@@ -18,6 +20,10 @@ func NewGameHandler(cfg *config.Config) *GameHandler {
 	}
 }
 
+// Game Route
+// ==================================================
+
+// HomeHandler get home page
 func (gh *GameHandler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	view, err := gh.cfg.Views.GetTemplate("index.jet")
 	if err != nil {
@@ -26,6 +32,29 @@ func (gh *GameHandler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	view.Execute(w, nil, nil)
 }
 
+// JoinRoom post with username
+func (gh *GameHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("username")
+	http.Redirect(w, r, "/game?username="+username, http.StatusSeeOther)
+}
+
+func (gh *GameHandler) GameRoom(w http.ResponseWriter, r *http.Request) {
+	username := r.URL.Query().Get("username")
+	fmt.Println(username)
+
+	view, err := gh.cfg.Views.GetTemplate("game.jet")
+	if err != nil {
+		log.Println("Unexpected template err:", err.Error())
+	}
+	vars := make(jet.VarMap)
+	vars.Set("Username", username)
+	view.Execute(w, vars, nil)
+}
+
+// Api Route
+// ==================================================
+
+// CheakGameHealth api check
 func (gh *GameHandler) CheakGameHealth(w http.ResponseWriter, r *http.Request) {
 	response := map[string]string{
 		"message": "working fine",
@@ -33,9 +62,4 @@ func (gh *GameHandler) CheakGameHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
-}
-
-func (gh *GameHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
-	http.Redirect(w, r, "/game?username="+username, http.StatusSeeOther)
 }

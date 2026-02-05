@@ -60,6 +60,14 @@ func TestAppRoutes(t *testing.T) {
 		responseLocation := res.Header().Get("Location")
 		assertLocation(t, responseLocation, "/game?username=Ronak")
 	})
+	t.Run("game endpoint should display username", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, `/game?username=Ronak`, nil)
+		res := httptest.NewRecorder()
+		server.router.ServeHTTP(res, req)
+
+		assertStatusCode(t, res.Code, http.StatusOK)
+		assertStringContains(t, res.Body.String(), "Ronak")
+	})
 }
 
 // Assert Helper Function
