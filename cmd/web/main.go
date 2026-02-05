@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/CloudyKit/jet/v6"
+	"github.com/suryansh74/sketlo/internal/chat"
 	"github.com/suryansh74/sketlo/internal/config"
 	"github.com/suryansh74/sketlo/internal/server"
 )
@@ -12,7 +13,10 @@ func main() {
 		jet.DevelopmentMode(true),
 	)
 
-	cfg := config.NewConfig(views)
+	hub := chat.NewHub()
+	go hub.Run()
+
+	cfg := config.NewConfig(views, hub)
 	server := server.NewServer(cfg)
 	server.StartServer()
 }

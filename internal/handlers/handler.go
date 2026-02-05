@@ -8,6 +8,7 @@ import (
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gorilla/websocket"
+	"github.com/suryansh74/sketlo/internal/chat"
 	"github.com/suryansh74/sketlo/internal/config"
 )
 
@@ -58,14 +59,8 @@ func (gh *GameHandler) GameRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func (gh *GameHandler) WsEndpoint(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	w.WriteHeader(http.StatusSwitchingProtocols)
-	fmt.Println("client connected to websocket")
-	defer conn.Close()
+	// use client function
+	chat.ServeWs(gh.cfg.Hub, w, r)
 }
 
 // Api Route

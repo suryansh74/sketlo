@@ -10,6 +10,7 @@ import (
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gorilla/websocket"
+	"github.com/suryansh74/sketlo/internal/chat"
 	"github.com/suryansh74/sketlo/internal/config"
 )
 
@@ -21,7 +22,10 @@ func TestAppRoutes(t *testing.T) {
 		jet.NewOSFileSystemLoader("../../views"),
 	)
 
-	cfg := config.NewConfig(views)
+	hub := chat.NewHub()
+	go hub.Run()
+
+	cfg := config.NewConfig(views, hub)
 	server := NewServer(cfg)
 
 	t.Run("if user hit /check_health, then sc:200 rb:json", func(t *testing.T) {
@@ -82,6 +86,31 @@ func TestAppRoutes(t *testing.T) {
 
 		assertStatusCode(t, res.StatusCode, http.StatusSwitchingProtocols)
 	})
+	t.Run("hub broadcasting working", func(t *testing.T) {
+		ts := httptest.NewServer(server.router)
+		defer ts.Close()
+
+		wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+
+		dialer := websocket.Dialer{}
+
+		aliceConn, _, err := dialer.Dial(wsURL, nil)
+		assertNotError(t, err)
+		defer aliceConn.Close()
+
+		bobConn, _, err := dialer.Dial(wsURL, nil)
+		assertNotError(t, err)
+		defer bobConn.Close()
+
+		message := []byte("Hello Sketlo")
+		err = aliceConn.WriteMessage(websocket.TextMessage, message)
+		assertNotError(t, err)
+
+		_, got, err := bobConn.ReadMessage()
+		assertNotError(t, err)
+
+		assertEqual(t, string(got), string(message))
+	})
 }
 
 // Assert Helper Function
@@ -123,6 +152,13 @@ func assertStringContains(t *testing.T, body, match string) {
 }
 
 func assertLocation(t *testing.T, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func assertEqual(t *testing.T, got, want string) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
