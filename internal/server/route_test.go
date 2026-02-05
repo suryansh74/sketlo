@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gorilla/websocket"
@@ -122,5 +124,43 @@ func TestAppRoutes(t *testing.T) {
 
 		assert.Equal(t, received.Action, "broadcast")
 		assert.Equal(t, received.Message, "Hello JSON")
+	})
+	t.Run("client storing or not with username in hub->client", func(t *testing.T) {
+		ts := httptest.NewServer(server.router)
+		defer ts.Close()
+
+		wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+		dialer := websocket.Dialer{}
+
+		expectedNames := []string{"Alice", "Bob", "Kriti", "Maria", "Ronak"} // Alphabetical
+
+		for _, name := range expectedNames {
+			conn, _, err := dialer.Dial(wsURL, nil)
+			require.NoError(t, err)
+			defer conn.Close()
+
+			payload := chat.WsPayload{
+				Action:   "join",
+				Username: name,
+			}
+			err = conn.WriteJSON(payload)
+			require.NoError(t, err)
+		}
+
+		// Give the Hub a moment to process the registration and the "Join" message
+		// In a real-world scenario, you might use a WaitGroup or a channel in the hub
+		// to signal completion, but for a quick test fix, a small sleep works:
+		time.Sleep(100 * time.Millisecond)
+
+		var namesInClients []string
+		// Note: Ensure you are accessing hub.Clients safely if it's not thread-safe!
+		for client := range hub.Clients {
+			namesInClients = append(namesInClients, client.Username)
+		}
+
+		sort.Strings(namesInClients)
+		sort.Strings(expectedNames)
+
+		assert.Equal(t, expectedNames, namesInClients, "Hub should contain all joined usernames")
 	})
 }
