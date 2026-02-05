@@ -88,31 +88,7 @@ func TestAppRoutes(t *testing.T) {
 
 		assert.Equal(t, res.StatusCode, http.StatusSwitchingProtocols)
 	})
-	t.Run("hub broadcasting working", func(t *testing.T) {
-		ts := httptest.NewServer(server.router)
-		defer ts.Close()
 
-		wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
-
-		dialer := websocket.Dialer{}
-
-		aliceConn, _, err := dialer.Dial(wsURL, nil)
-		require.NoError(t, err)
-		defer aliceConn.Close()
-
-		bobConn, _, err := dialer.Dial(wsURL, nil)
-		require.NoError(t, err)
-		defer bobConn.Close()
-
-		message := []byte("Hello Sketlo")
-		err = aliceConn.WriteMessage(websocket.TextMessage, message)
-		require.NoError(t, err)
-
-		_, got, err := bobConn.ReadMessage()
-		require.NoError(t, err)
-
-		assert.Equal(t, string(got), string(message))
-	})
 	t.Run("hub broadcasting json payload", func(t *testing.T) {
 		ts := httptest.NewServer(server.router)
 		defer ts.Close()

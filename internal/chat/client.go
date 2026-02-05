@@ -5,7 +5,7 @@
 package chat
 
 import (
-	"bytes"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -46,9 +46,11 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	Send chan []byte
+
+	Username string
 }
 
-// readPump pumps messages from the websocket connection to the hub.
+// ReadPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
@@ -62,19 +64,32 @@ func (c *Client) ReadPump() {
 	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.Conn.ReadMessage()
+		var payload WsPayload
+		err := c.Conn.ReadJSON(&payload)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.Hub.Broadcast <- message
+		switch payload.Action {
+		case "join":
+			c.Username = payload.Username
+			log.Println("A new user joined:", payload.Username)
+			// c.Hub.Broadcast <- []byte(payload.Message)
+		case "broadcast":
+			payload.Username = c.Username
+			response, err := json.Marshal(payload)
+			if err != nil {
+				log.Println("marshal error", err)
+				continue
+			}
+			c.Hub.Broadcast <- response
+		}
 	}
 }
 
-// writePump pumps messages from the hub to the websocket connection.
+// WritePump pumps messages from the hub to the websocket connection.
 //
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
