@@ -83,15 +83,22 @@ func (c *Client) ReadPump() {
 		case "join":
 			c.Username = payload.Username
 			getConnectedUsers := c.Hub.GetConnectedUsers()
-			response, err := json.Marshal(getConnectedUsers)
+			var userListPayload WsPayload
+			userListPayload.Username = payload.Username
+			userListPayload.Users = getConnectedUsers
+			userListPayload.Action = "user-list"
+			response, err := json.Marshal(userListPayload)
 			if err != nil {
 				log.Println("marshal error", err)
 				continue
 			}
 			c.Hub.Broadcast <- []byte(response)
-		case "broadcast":
-			payload.Username = c.Username
-			response, err := json.Marshal(payload)
+		case "message":
+			var messagePayload WsPayload
+			messagePayload.Username = payload.Username
+			messagePayload.Action = payload.Action
+			messagePayload.Message = payload.Message
+			response, err := json.Marshal(messagePayload)
 			if err != nil {
 				log.Println("marshal error", err)
 				continue

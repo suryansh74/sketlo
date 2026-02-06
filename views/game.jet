@@ -31,13 +31,34 @@
         <!-- show canvas -->
         <div class="col-span-6 bg-gray-300 p-4">6</div>
         <!-- show chat box and message field -->
-        <div class="col-span-4 bg-gray-300 p-4">4</div>
+        <div class="col-span-4 p-4 flex-col">
+          <!-- chat box -->
+          <div id="chat-box" class="h-48 w-90 border rounded-md mx-auto"></div>
+          <!-- message field -->
+          <div class="flex items-center">
+            <input
+              class="border rounded-md p-2 w-full"
+              type="text"
+              placeholder="Enter Message"
+              id="message-field"
+            />
+            <button
+              class="bg-blue-500 text-white px-4 py-2 rounded-md"
+              id="send-message"
+            >
+              Send
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <script>
       var socket = null;
       var username = "{{ Username }}";
       var userList = document.getElementById("user-list");
+      var sendMessage = document.getElementById("send-message");
+      var messageField = document.getElementById("message-field");
+      var chatBox = document.getElementById("chat-box");
       document.addEventListener("DOMContentLoaded", function () {
         socket = new WebSocket("ws://localhost:8000/ws");
         socket.onopen = () => {
@@ -51,35 +72,59 @@
           console.log("Sent join message", joinPayload);
         };
         socket.onmessage = (msg) => {
-          var player = JSON.parse(msg.data);
-          console.log(player);
-          userList.innerHTML = "";
-          for (let i = 0; i < player.length; i++) {
-            const li = document.createElement("li");
-            li.textContent = player[i];
-            li.classList.add(
-              "px-3",
-              "py-2",
-              "rounded-md",
-              "font-medium",
-              "transition-colors",
-            );
+          var data = JSON.parse(msg.data);
 
-            if (player[i] === username) {
-              li.classList.add("bg-blue-600", "text-white");
-              li.textContent += " (you)";
-            } else {
+          console.log("data", data);
+          if (data.action == "user-list") {
+            var player = data.users;
+            userList.innerHTML = "";
+            for (let i = 0; i < player.length; i++) {
+              const li = document.createElement("li");
+              li.textContent = player[i];
               li.classList.add(
-                "bg-gray-100",
-                "text-gray-700",
-                "hover:bg-gray-200",
+                "px-3",
+                "py-2",
+                "rounded-md",
+                "font-medium",
+                "transition-colors",
               );
-            }
 
-            userList.appendChild(li);
+              if (player[i] === username) {
+                li.classList.add("bg-blue-600", "text-white");
+                li.textContent += " (you)";
+              } else {
+                li.classList.add(
+                  "bg-gray-100",
+                  "text-gray-700",
+                  "hover:bg-gray-200",
+                );
+              }
+              userList.appendChild(li);
+            }
+          }
+          if (data.action == "message") {
+            console.log("message received from server", data.message);
+            let message = data.message;
+            chatBox.innerHTML += `<span><strong>${data.username}</strong>:${data.message}</span><br>`;
           }
         };
+        sendMessage.addEventListener("click", messageSender);
       });
+
+      const messageSender = () => {
+        if (messageField.value == "") {
+          alert("emtpy message field");
+          return false;
+        }
+        console.log("button clicked");
+        messagePayload = {
+          action: "message",
+          username: username,
+          message: messageField.value,
+        };
+        socket.send(JSON.stringify(messagePayload));
+        messageField.value = "";
+      };
     </script>
   </body>
 </html>
