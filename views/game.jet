@@ -10,13 +10,33 @@
     <div class="m-8">
       <h1 class="text-3xl text-orange-500 font-bold">Welcome {{Username}}</h1>
       <hr class="mt-4 mb-4 border-slate-600" />
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-2 bg-gray-300 p-4">
+          {{ range _, user:= ConnectedUsers}}
+          <li>{{ user }}</li>
+          {{ end }}
+        </div>
+        <div class="col-span-6 bg-gray-300 p-4">6</div>
+        <div class="col-span-4 bg-gray-300 p-4">4</div>
+      </div>
     </div>
     <script>
       var socket = null;
+      var username = "{{ Username }}";
       document.addEventListener("DOMContentLoaded", function () {
         socket = new WebSocket("ws://localhost:8000/ws");
         socket.onopen = () => {
           console.log("Connected to server");
+          const joinPayload = {
+            action: "join",
+            username: username,
+            message: "",
+          };
+          socket.send(JSON.stringify(joinPayload));
+          console.log("Sent join message", joinPayload);
+        };
+        socket.onmessage = (msg) => {
+          console.log(msg.data);
         };
       });
     </script>

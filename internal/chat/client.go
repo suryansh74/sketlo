@@ -75,7 +75,6 @@ func (c *Client) ReadPump() {
 		switch payload.Action {
 		case "join":
 			c.Username = payload.Username
-			log.Println("A new user joined:", payload.Username)
 			// c.Hub.Broadcast <- []byte(payload.Message)
 		case "broadcast":
 			payload.Username = c.Username

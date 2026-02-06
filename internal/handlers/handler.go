@@ -53,8 +53,11 @@ func (gh *GameHandler) GameRoom(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Unexpected template err:", err.Error())
 	}
+	getConnectedUsers := gh.cfg.Hub.GetConnectedUsers()
 	vars := make(jet.VarMap)
 	vars.Set("Username", username)
+	vars.Set("ConnectedUsers", getConnectedUsers)
+
 	view.Execute(w, vars, nil)
 }
 
@@ -75,3 +78,6 @@ func (gh *GameHandler) CheakGameHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
+
+// Helper function
+// ==================================================

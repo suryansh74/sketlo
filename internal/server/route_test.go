@@ -163,4 +163,54 @@ func TestAppRoutes(t *testing.T) {
 
 		assert.Equal(t, expectedNames, namesInClients, "Hub should contain all joined usernames")
 	})
+
+	t.Run("/game endpoint must contains names of clients", func(t *testing.T) {
+		// insert some clients first
+		ts := httptest.NewServer(server.router)
+		defer ts.Close()
+
+		wsURL := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
+		dialer := websocket.Dialer{}
+
+		expectedNames := []string{"Alice", "Bob", "Kriti", "Maria", "Ronak"} // Alphabetical
+
+		for _, name := range expectedNames {
+			conn, _, err := dialer.Dial(wsURL, nil)
+			require.NoError(t, err)
+			defer conn.Close()
+
+			payload := chat.WsPayload{
+				Action:   "join",
+				Username: name,
+			}
+			err = conn.WriteJSON(payload)
+			require.NoError(t, err)
+		}
+
+		assert.Eventually(t, func() bool {
+			users := hub.GetConnectedUsers()
+			return len(expectedNames) == len(users)
+		}, 2*time.Second, 50*time.Millisecond, "Time out waiting for users to join hub")
+
+		// new incoming client should see list of all already connected client names
+		req := httptest.NewRequest(http.MethodGet, "/game?username=Deepak", nil)
+		res := httptest.NewRecorder()
+		server.router.ServeHTTP(res, req)
+		// connecting ws
+		conn, _, err := dialer.Dial(wsURL, nil)
+		require.NoError(t, err)
+		defer conn.Close()
+
+		payload := chat.WsPayload{
+			Action:   "join",
+			Username: "Deepak",
+		}
+		expectedNames = append(expectedNames, "Deepak")
+		err = conn.WriteJSON(payload)
+		require.NoError(t, err)
+
+		for _, name := range expectedNames {
+			assert.Contains(t, res.Body.String(), name)
+		}
+	})
 }
