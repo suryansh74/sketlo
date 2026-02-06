@@ -14,7 +14,11 @@
         <!-- show users -->
         <div class="col-span-2 bg-gray-300 p-4">
           <p class="text-blue-500 text-center text-2xl">Online Players</p>
-          <ul id="user-list"></ul>
+          <ul id="user-list">
+            {{range _, user := ConnectedUsers}}
+            <li>{{user}}</li>
+            {{end}}
+          </ul>
         </div>
         <!-- show canvas -->
         <div class="col-span-6 bg-gray-300 p-4">6</div>
