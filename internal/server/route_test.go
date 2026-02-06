@@ -109,7 +109,7 @@ func TestAppRoutes(t *testing.T) {
 
 		// alice sending data
 		wsPayload := chat.WsPayload{
-			Action:   "broadcast",
+			Action:   "message",
 			Username: "Alice",
 			Message:  "Hello JSON",
 		}
@@ -122,7 +122,7 @@ func TestAppRoutes(t *testing.T) {
 		err = bobConn.ReadJSON(&received)
 		require.NoError(t, err)
 
-		assert.Equal(t, received.Action, "broadcast")
+		assert.Equal(t, received.Action, "message")
 		assert.Equal(t, received.Message, "Hello JSON")
 	})
 	t.Run("client storing or not with username in hub->client", func(t *testing.T) {
