@@ -12,11 +12,19 @@
       <hr class="mt-4 mb-4 border-slate-600" />
       <div class="grid grid-cols-12 gap-4">
         <!-- show users -->
-        <div class="col-span-2 bg-gray-300 p-4">
-          <p class="text-blue-500 text-center text-2xl">Online Players</p>
-          <ul id="user-list">
+        <div
+          class="col-span-2 bg-white rounded-lg shadow-md p-4 border border-gray-200"
+        >
+          <p class="text-blue-600 text-center text-lg font-semibold mb-4">
+            Online Players
+          </p>
+          <ul id="user-list" class="space-y-2">
             {{range _, user := ConnectedUsers}}
-            <li>{{user}}</li>
+            <li
+              class="px-3 py-2 bg-gray-100 rounded-md text-gray-700 font-medium"
+            >
+              {{user}}
+            </li>
             {{end}}
           </ul>
         </div>
@@ -49,6 +57,25 @@
           for (let i = 0; i < player.length; i++) {
             const li = document.createElement("li");
             li.textContent = player[i];
+            li.classList.add(
+              "px-3",
+              "py-2",
+              "rounded-md",
+              "font-medium",
+              "transition-colors",
+            );
+
+            if (player[i] === username) {
+              li.classList.add("bg-blue-600", "text-white");
+              li.textContent += " (you)";
+            } else {
+              li.classList.add(
+                "bg-gray-100",
+                "text-gray-700",
+                "hover:bg-gray-200",
+              );
+            }
+
             userList.appendChild(li);
           }
         };
