@@ -11,18 +11,21 @@
       <h1 class="text-3xl text-orange-500 font-bold">Welcome {{Username}}</h1>
       <hr class="mt-4 mb-4 border-slate-600" />
       <div class="grid grid-cols-12 gap-4">
+        <!-- show users -->
         <div class="col-span-2 bg-gray-300 p-4">
-          {{ range _, user:= ConnectedUsers}}
-          <li>{{ user }}</li>
-          {{ end }}
+          <p class="text-blue-500 text-center text-2xl">Online Players</p>
+          <ul id="user-list"></ul>
         </div>
+        <!-- show canvas -->
         <div class="col-span-6 bg-gray-300 p-4">6</div>
+        <!-- show chat box and message field -->
         <div class="col-span-4 bg-gray-300 p-4">4</div>
       </div>
     </div>
     <script>
       var socket = null;
       var username = "{{ Username }}";
+      var userList = document.getElementById("user-list");
       document.addEventListener("DOMContentLoaded", function () {
         socket = new WebSocket("ws://localhost:8000/ws");
         socket.onopen = () => {
@@ -36,7 +39,14 @@
           console.log("Sent join message", joinPayload);
         };
         socket.onmessage = (msg) => {
-          console.log(msg.data);
+          var player = JSON.parse(msg.data);
+          console.log(player);
+          userList.innerHTML = "";
+          for (let i = 0; i < player.length; i++) {
+            const li = document.createElement("li");
+            li.textContent = player[i];
+            userList.appendChild(li);
+          }
         };
       });
     </script>

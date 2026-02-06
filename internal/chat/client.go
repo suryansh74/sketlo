@@ -58,6 +58,13 @@ type Client struct {
 func (c *Client) ReadPump() {
 	defer func() {
 		c.Hub.Unregister <- c
+		getConnectedUsers := c.Hub.GetConnectedUsers()
+		currentUsers := removeUser(getConnectedUsers, c.Username)
+		response, err := json.Marshal(currentUsers)
+		if err != nil {
+			log.Println("marshal error", err)
+		}
+		c.Hub.Broadcast <- []byte(response)
 		c.Conn.Close()
 	}()
 	c.Conn.SetReadLimit(maxMessageSize)
@@ -75,7 +82,13 @@ func (c *Client) ReadPump() {
 		switch payload.Action {
 		case "join":
 			c.Username = payload.Username
-			// c.Hub.Broadcast <- []byte(payload.Message)
+			getConnectedUsers := c.Hub.GetConnectedUsers()
+			response, err := json.Marshal(getConnectedUsers)
+			if err != nil {
+				log.Println("marshal error", err)
+				continue
+			}
+			c.Hub.Broadcast <- []byte(response)
 		case "broadcast":
 			payload.Username = c.Username
 			response, err := json.Marshal(payload)
@@ -148,4 +161,14 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// new goroutines.
 	go client.WritePump()
 	go client.ReadPump()
+}
+
+func removeUser(users []string, username string) []string {
+	result := make([]string, 0, len(users))
+	for _, u := range users {
+		if u != username {
+			result = append(result, u)
+		}
+	}
+	return result
 }
