@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/CloudyKit/jet/v6"
-	"github.com/gorilla/websocket"
 	"github.com/suryansh74/sketlo/internal/chat"
 	"github.com/suryansh74/sketlo/internal/config"
 )
@@ -20,11 +19,6 @@ func NewGameHandler(cfg *config.Config) *GameHandler {
 	return &GameHandler{
 		cfg: cfg,
 	}
-}
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
 }
 
 // Game Route
